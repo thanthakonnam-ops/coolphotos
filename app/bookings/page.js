@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import PromptPayQR from '@/components/PromptPayQR';
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [openQrRef, setOpenQrRef] = useState(null);
 
   // Authentication check
   useEffect(() => {
@@ -207,15 +209,15 @@ export default function BookingsPage() {
           /* Bookings Cards / Table */
           <div className="space-y-4">
             {bookings.map((booking) => (
+              <div key={booking.id}>
               <div
-                key={booking.id}
                 className="bg-slate-800/80 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 sm:p-6 transition shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6"
               >
                 {/* Left: ID, Type, Name, Dates */}
                 <div className="space-y-2 flex-1">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span className="font-mono text-xs text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                      ID: {booking.id.slice(0, 10)}...
+                      {booking.orderRef ? `คำสั่งจอง ${booking.orderRef}` : `ID: ${booking.id.slice(0, 10)}...`}
                     </span>
                     {getItemTypeBadge(booking.itemType)}
                     {getStatusBadge(booking.status)}
@@ -223,6 +225,9 @@ export default function BookingsPage() {
 
                   <h3 className="text-lg font-bold text-white">
                     {booking.itemName}
+                    {booking.quantity > 1 && (
+                      <span className="text-sm font-normal text-slate-400"> × {booking.quantity}</span>
+                    )}
                   </h3>
 
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 pt-1">
@@ -252,18 +257,37 @@ export default function BookingsPage() {
                       ยอดชำระสุทธิ
                     </span>
                     <span className="text-xl font-extrabold text-orange-400">
-                      ฿{Number(booking.totalPrice || 0).toLocaleString()}
+                      ฿{(Number(booking.totalPrice || 0) + Number(booking.deposit || 0)).toLocaleString()}
                     </span>
+                    {booking.deposit > 0 && (
+                      <span className="text-[11px] text-slate-400 block md:text-right">
+                        รวมมัดจำ ฿{Number(booking.deposit).toLocaleString()} (ได้คืนหลังส่งคืน)
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {booking.status === 'PENDING' && booking.orderRef && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenQrRef(openQrRef === booking.orderRef ? null : booking.orderRef)
+                        }
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 transition"
+                      >
+                        <i className="fa-solid fa-qrcode mr-1.5"></i>
+                        {openQrRef === booking.orderRef ? 'ซ่อน QR' : 'ชำระเงิน'}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() =>
                         alert(
-                          `รายละเอียดคำสั่งจอง #${booking.id}\nรายการ: ${booking.itemName}\nสถานะ: ${booking.status}\nยอดเงิน: ฿${Number(
+                          `รายละเอียดคำสั่งจอง ${booking.orderRef || '#' + booking.id}\nรายการ: ${booking.itemName}\nสถานะ: ${booking.status}\nค่าเช่า/ค่าบริการ: ฿${Number(
                             booking.totalPrice
-                          ).toLocaleString()}`
+                          ).toLocaleString()}\nเงินมัดจำ: ฿${Number(booking.deposit || 0).toLocaleString()}` +
+                            (booking.contactName ? `\nผู้จอง: ${booking.contactName} (${booking.contactPhone})` : '') +
+                            (booking.address ? `\nที่อยู่/สถานที่: ${booking.address}` : '')
                         )
                       }
                       className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 bg-slate-700/60 hover:bg-slate-700 hover:text-white border border-slate-600/60 transition"
@@ -272,6 +296,15 @@ export default function BookingsPage() {
                     </button>
                   </div>
                 </div>
+              </div>
+              {openQrRef && openQrRef === booking.orderRef && (
+                <div className="max-w-xs mx-auto md:ml-auto md:mr-0 mt-3">
+                  <PromptPayQR orderRef={booking.orderRef} />
+                  <p className="text-[11px] text-slate-400 text-center mt-2">
+                    ยอดนี้รวมทุกรายการที่ยังรอยืนยันในคำสั่งจอง {booking.orderRef}
+                  </p>
+                </div>
+              )}
               </div>
             ))}
           </div>

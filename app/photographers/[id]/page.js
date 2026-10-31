@@ -7,51 +7,6 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCart } from '@/components/CartProvider';
 
-const fallbackPhotographers = [
-  {
-    id: 'photo-1',
-    name: 'คุณธนกฤต วิทยากร (เบียร์)',
-    specialty: 'พอร์ตเทรต/รับปริญญา',
-    location: 'กรุงเทพฯ และปริมณฑล',
-    rating: 4.9,
-    reviewCount: 128,
-    pricePerHalf: 3500,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80',
-    image1: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80',
-    image2: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80',
-    image3: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80',
-    bio: 'ช่างภาพอิสระประสบการณ์กว่า 6 ปี เชี่ยวชาญการถ่ายภาพพอร์ตเทรต แฟชั่น และงานรับปริญญาทั้งเดี่ยวและกลุ่ม โทนสีอบอุ่น ละมุน เป็นธรรมชาติ พร้อมกำกับท่าโพสให้ผ่อนคลาย',
-  },
-  {
-    id: 'photo-2',
-    name: 'คุณพิมพ์ชนก แสงแก้ว (นก)',
-    specialty: 'งานแต่งงาน/พรีเวดดิ้ง',
-    location: 'กรุงเทพฯ / ทั่วประเทศ',
-    rating: 5.0,
-    reviewCount: 95,
-    pricePerHalf: 6500,
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80',
-    image1: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80',
-    image2: 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&q=80',
-    image3: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&q=80',
-    bio: 'บันทึกเรื่องราวความรักและอารมณ์ความรู้สึกอันล้ำค่า ถ่ายทอดความทรงจำวันสำคัญด้วยสไตล์ Documentary & Cinematic ดูแลทุกรายละเอียดตั้งแต่พิธีการจนถึงอาฟเตอร์ปาร์ตี้',
-  },
-  {
-    id: 'photo-3',
-    name: 'คุณณัฐดนัย ภัทรพล (ต้น)',
-    specialty: 'อีเวนต์/คอนเสิร์ต',
-    location: 'กรุงเทพฯ',
-    rating: 4.8,
-    reviewCount: 76,
-    pricePerHalf: 4500,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80',
-    image1: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80',
-    image2: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80',
-    image3: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80',
-    bio: 'ช่างภาพสายคอนเสิร์ตและอีเวนต์ความเร็วสูง ดึงอารมณ์แสงสีเสียงและจังหวะของศิลปินได้อย่างแม่นยำ พร้อมส่งไฟล์รูปด่วนสำหรับทีมสื่อมวลชน',
-  },
-];
-
 export default function PhotographerDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -61,33 +16,24 @@ export default function PhotographerDetailPage() {
   const [photographer, setPhotographer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchPhotographer = async () => {
       try {
         setLoading(true);
-        const res = await fetch('/api/photographers');
-        if (res.ok) {
-          const data = await res.json();
-          const match = data.find((p) => p.id === photographerId);
-          if (match) {
-            setPhotographer(match);
-            setActiveImage(match.image1 || match.avatar);
-            setLoading(false);
-            return;
-          }
-        }
+        const res = await fetch(`/api/photographers?id=${encodeURIComponent(photographerId)}`);
+        if (!res.ok) throw new Error('Failed to fetch photographer');
+        const [match] = await res.json();
+        setPhotographer(match || null);
+        setActiveImage(match?.image1 || match?.avatar || '');
+        setError('');
       } catch (e) {
-        // Fallback
+        console.error('Error loading photographer:', e);
+        setError('ไม่สามารถโหลดข้อมูลช่างภาพได้ กรุณาลองใหม่อีกครั้ง');
+      } finally {
+        setLoading(false);
       }
-
-      // Check fallback list
-      const fallback =
-        fallbackPhotographers.find((p) => p.id === photographerId) ||
-        fallbackPhotographers[0];
-      setPhotographer(fallback);
-      setActiveImage(fallback?.image1 || fallback?.avatar);
-      setLoading(false);
     };
 
     fetchPhotographer();
@@ -110,6 +56,32 @@ export default function PhotographerDetailPage() {
     return (
       <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center">
         <i className="fa-solid fa-circle-notch fa-spin text-3xl text-orange-500"></i>
+      </div>
+    );
+  }
+
+  if (!photographer) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center px-4 py-24">
+          <div className="text-center max-w-md">
+            <i className="fa-solid fa-user-slash text-4xl text-slate-500 mb-4 block"></i>
+            <h1 className="text-xl font-bold text-white mb-2">
+              {error || 'ไม่พบข้อมูลช่างภาพที่คุณต้องการ'}
+            </h1>
+            <p className="text-slate-400 text-sm mb-6">
+              ช่างภาพท่านนี้อาจไม่ได้เปิดรับงานแล้ว ลองเลือกช่างภาพท่านอื่นได้เลย
+            </p>
+            <Link
+              href="/photographers"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white bg-orange-500 hover:bg-orange-600 transition"
+            >
+              ดูช่างภาพทั้งหมด
+            </Link>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }

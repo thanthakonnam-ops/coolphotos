@@ -2,12 +2,34 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { ITEM_TYPES, findItem } from '@/lib/catalog'
+import { MAX_QUANTITY } from '@/lib/pricing'
+
+const MAX_ITEMS = 50
+
+// Database row → the shape CartProvider uses in the browser
+function toClientItem(row) {
+  return {
+    id: row.itemId,
+    type: row.itemType.toLowerCase(),
+    name: row.itemName,
+    price: row.price,
+    quantity: row.quantity,
+    image: row.image || '',
+    category: row.category || ''
+  }
+}
+
+async function requireUserId() {
+  const session = await getServerSession(authOptions)
+  return session?.user?.id || null
+}
 
 // GET /api/cart - Return cart items for authenticated user
-export async function GET(request) {
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    const userId = await requireUserId()
+    if (!userId) {
       return NextResponse.json(
         { error: 'กรุณาเข้าสู่ระบบก่อนดูตะกร้าสินค้า' },
         { status: 401 }
@@ -15,11 +37,11 @@ export async function GET(request) {
     }
 
     const cartItems = await prisma.cartItem.findMany({
-      where: { userId: session.user.id },
-      orderBy: { addedAt: 'desc' }
+      where: { userId },
+      orderBy: { addedAt: 'asc' }
     })
 
-    return NextResponse.json(cartItems)
+    return NextResponse.json(cartItems.map(toClientItem))
   } catch (error) {
     console.error('Error fetching cart:', error)
     return NextResponse.json(
@@ -29,136 +51,68 @@ export async function GET(request) {
   }
 }
 
-// POST /api/cart - Add item to cart
-export async function POST(request) {
+// PUT /api/cart - Replace the user's whole cart
+// Body: { items: [{ type, id, quantity }] }. Names, prices and images are taken
+// from the database; items that no longer exist are dropped.
+export async function PUT(request) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    const userId = await requireUserId()
+    if (!userId) {
       return NextResponse.json(
-        { error: 'กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า' },
+        { error: 'กรุณาเข้าสู่ระบบก่อนแก้ไขตะกร้าสินค้า' },
         { status: 401 }
       )
     }
 
-    const body = await request.json()
-    const { itemType, itemId, itemName, price, image, quantity = 1 } = body
+    let body
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'รูปแบบข้อมูลไม่ถูกต้อง' }, { status: 400 })
+    }
 
-    if (!itemType || !itemId || !itemName || price === undefined) {
+    const items = body?.items
+    if (!Array.isArray(items) || items.length > MAX_ITEMS) {
       return NextResponse.json(
-        { error: 'ข้อมูลสินค้าไม่ครบถ้วน (ต้องมี itemType, itemId, itemName, price)' },
+        { error: `ตะกร้าต้องเป็นรายการสินค้าไม่เกิน ${MAX_ITEMS} รายการ` },
         { status: 400 }
       )
     }
 
-    const itemPrice = parseInt(price, 10)
-    const itemQty = parseInt(quantity, 10) || 1
+    const rows = []
+    const seen = new Set()
+    for (const item of items) {
+      const itemType = ITEM_TYPES[item?.type]
+      const itemId = typeof item?.id === 'string' ? item.id : ''
+      const quantity = Math.min(Math.max(Math.floor(Number(item?.quantity)) || 1, 1), MAX_QUANTITY)
+      const key = `${itemType}:${itemId}`
+      if (!itemType || !itemId || seen.has(key)) continue
 
-    // Check if the item is already in user's cart
-    const existingItem = await prisma.cartItem.findFirst({
-      where: {
-        userId: session.user.id,
-        itemId: String(itemId),
-        itemType: String(itemType)
-      }
-    })
-
-    let cartItem
-    if (existingItem) {
-      cartItem = await prisma.cartItem.update({
-        where: { id: existingItem.id },
-        data: {
-          quantity: existingItem.quantity + itemQty
-        }
-      })
-    } else {
-      cartItem = await prisma.cartItem.create({
-        data: {
-          userId: session.user.id,
-          itemType: String(itemType),
-          itemId: String(itemId),
-          itemName: String(itemName),
-          price: itemPrice,
-          image: image || '',
-          quantity: itemQty
-        }
+      const found = await findItem(prisma, itemType, itemId)
+      if (!found) continue
+      seen.add(key)
+      rows.push({
+        userId,
+        itemType,
+        itemId,
+        itemName: found.name,
+        price: found.unitPrice,
+        image: found.image || '',
+        category: found.category || '',
+        quantity
       })
     }
 
-    return NextResponse.json(cartItem, { status: 201 })
+    await prisma.$transaction([
+      prisma.cartItem.deleteMany({ where: { userId } }),
+      prisma.cartItem.createMany({ data: rows })
+    ])
+
+    return NextResponse.json(rows.map(toClientItem))
   } catch (error) {
-    console.error('Error adding to cart:', error)
+    console.error('Error saving cart:', error)
     return NextResponse.json(
-      { error: 'เกิดข้อผิดพลาดในการเพิ่มสินค้าลงตะกร้า' },
-      { status: 500 }
-    )
-  }
-}
-
-// DELETE /api/cart - Remove item from cart
-export async function DELETE(request) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'กรุณาเข้าสู่ระบบก่อนลบสินค้า' },
-        { status: 401 }
-      )
-    }
-
-    let cartItemId = null
-
-    // Check query params first
-    const { searchParams } = new URL(request.url)
-    cartItemId = searchParams.get('cartItemId') || searchParams.get('id')
-
-    // If not in query params, inspect request body
-    if (!cartItemId) {
-      try {
-        const body = await request.json()
-        cartItemId = body?.cartItemId || body?.id
-      } catch (e) {
-        // Body was empty or not json
-      }
-    }
-
-    if (!cartItemId) {
-      return NextResponse.json(
-        { error: 'กรุณาระบุรหัสสินค้าในตะกร้า (cartItemId)' },
-        { status: 400 }
-      )
-    }
-
-    // Verify ownership
-    const cartItem = await prisma.cartItem.findUnique({
-      where: { id: cartItemId }
-    })
-
-    if (!cartItem) {
-      return NextResponse.json(
-        { error: 'ไม่พบรายการสินค้านี้ในตะกร้า' },
-        { status: 404 }
-      )
-    }
-
-    if (cartItem.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: 'คุณไม่มีสิทธิ์ในการลบรายการนี้' },
-        { status: 403 }
-      )
-    }
-
-    await prisma.cartItem.delete({
-      where: { id: cartItemId }
-    })
-
-    return NextResponse.json({
-      message: 'ลบรายการออกจากตะกร้าสำเร็จ',
-      id: cartItemId
-    })
-  } catch (error) {
-    console.error('Error deleting from cart:', error)
-    return NextResponse.json(
-      { error: 'เกิดข้อผิดพลาดในการลบสินค้าออกจากตะกร้า' },
+      { error: 'เกิดข้อผิดพลาดในการบันทึกตะกร้าสินค้า' },
       { status: 500 }
     )
   }

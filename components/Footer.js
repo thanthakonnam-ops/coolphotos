@@ -36,51 +36,69 @@ export default function Footer() {
             </h4>
             <ul className="space-y-3 text-sm">
               <li>
-                <a
-                  href="#rental"
+                <Link
+                  href="/#rental"
                   className="hover:text-white transition-colors flex items-center gap-2"
                 >
                   <i className="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
                   <span>เช่ากล้อง & เลนส์</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#photographers"
+                <Link
+                  href="/#photographers"
                   className="hover:text-white transition-colors flex items-center gap-2"
                 >
                   <i className="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
                   <span>จองคิวช่างภาพ</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#packages"
+                <Link
+                  href="/#packages"
                   className="hover:text-white transition-colors flex items-center gap-2"
                 >
                   <i className="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
                   <span>แพ็กเกจสุดคุ้ม</span>
-                </a>
+                </Link>
               </li>
               <li>
                 <Link
-                  href="/rental?cat=accessories"
+                  href="/gear"
                   className="hover:text-white transition-colors flex items-center gap-2"
                 >
                   <i className="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
-                  <span>โดรน & ไฟสตูดิโอ</span>
+                  <span>อุปกรณ์ทั้งหมด</span>
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 2: ช่วยเหลือ & กฎเกณฑ์ */}
+          {/* Column 2: ช่วยเหลือ */}
           <div>
             <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-5 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-              <span>ช่วยเหลือ & กฎเกณฑ์</span>
+              <span>ช่วยเหลือ</span>
             </h4>
             <ul className="space-y-3 text-sm">
+              <li>
+                <Link
+                  href="/#how-it-works"
+                  className="hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <i className="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+                  <span>ขั้นตอนการเช่า & จองคิว</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/bookings"
+                  className="hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <i className="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+                  <span>รายการจองของฉัน</span>
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/faq"
@@ -106,15 +124,6 @@ export default function Footer() {
                 >
                   <i className="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
                   <span>นโยบายความเป็นส่วนตัว</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/insurance"
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <i className="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
-                  <span>ประกันภัยคุ้มครองอุปกรณ์</span>
                 </Link>
               </li>
             </ul>

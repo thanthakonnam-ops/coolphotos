@@ -1,154 +1,60 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import GearCard from '@/components/GearCard';
 import { useCart } from '@/components/CartProvider';
 
-const fallbackGear = [
-  {
-    id: 'gear-1',
-    name: 'Sony Alpha A7 IV',
-    category: 'Mirrorless/DSLR',
-    description: 'กล้องฟูลเฟรมยอดนิยมสำหรับงานภาพนิ่งและวิดีโอ 4K 60p คุณภาพคมชัดระดับมืออาชีพ',
-    pricePerDay: 1200,
-    deposit: 3000,
-    image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'gear-2',
-    name: 'Canon EOS R5',
-    category: 'Mirrorless/DSLR',
-    description: 'บันทึกภาพความละเอียด 45MP และวิดีโอ 8K RAW เหมาะสำหรับงานพาณิชย์และพอร์ตเทรต',
-    pricePerDay: 1800,
-    deposit: 5000,
-    image: 'https://images.unsplash.com/photo-1502982720700-bfff97f2ecac?auto=format&fit=crop&q=80',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'gear-3',
-    name: 'Sony FE 24-70mm F2.8 GM II',
-    category: 'Lens/Accessories',
-    description: 'เลนส์ซูมมาตรฐานเกรดโปร คมชัดตั้งแต่ F2.8 น้ำหนักเบา ตอบโจทย์ทุกสถานการณ์',
-    pricePerDay: 800,
-    deposit: 2000,
-    image: 'https://images.unsplash.com/photo-1617005082133-548c4dd27f35?auto=format&fit=crop&q=80',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'gear-4',
-    name: 'DJI Ronin 4D 6K Combo',
-    category: 'Cinema & Video Cam',
-    description: 'กล้องซีนีม่าพร้อมกันสั่น 4 แกนในตัว ระบบโฟกัส LiDAR อุปกรณ์ระดับงานภาพยนตร์',
-    pricePerDay: 3500,
-    deposit: 8000,
-    image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&q=80',
-    status: 'QUEUED',
-    queueDate: '15 พ.ย.',
-  },
-  {
-    id: 'gear-5',
-    name: 'DJI Mini 4 Pro Fly More Combo',
-    category: 'Action Cam & Drone',
-    description: 'โดรนติดกล้องขนาดพกพา น้ำหนักต่ำกว่า 249 กรัม ถ่ายแนวตั้ง 4K HDR ปลอดภัยด้วยเซนเซอร์รอบทิศทาง',
-    pricePerDay: 950,
-    deposit: 2500,
-    image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&q=80',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'gear-6',
-    name: 'Fujifilm X-T5 + XF 16-80mm',
-    category: 'Mirrorless/DSLR',
-    description: 'โทนสีฟิล์มเอกลักษณ์ เซนเซอร์ 40.2MP เหมาะมากสำหรับการเดินทางและถ่ายภาพสตรีท',
-    pricePerDay: 1100,
-    deposit: 2500,
-    image: 'https://images.unsplash.com/photo-1512790182412-b19e6d62bc39?auto=format&fit=crop&q=80',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'gear-7',
-    name: 'Sony FE 70-200mm F2.8 GM OSS II',
-    category: 'Lens/Accessories',
-    description: 'เลนส์เทเลโฟโต้ไวแสง โฟกัสรวดเร็วและแม่นยำ เหมาะกับงานอีเวนต์ กีฬา และคอนเสิร์ต',
-    pricePerDay: 1100,
-    deposit: 3000,
-    image: 'https://images.unsplash.com/photo-1595183401569-b57f0fecad35?auto=format&fit=crop&q=80',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'gear-8',
-    name: 'GoPro HERO12 Black Creator Edition',
-    category: 'Action Cam & Drone',
-    description: 'กล้องแอคชั่น 5.3K พร้อมกริปแบตเตอรี่ ไมโครโฟน และไฟ LED ตอบโจทย์สาย Vlog และผจญภัย',
-    pricePerDay: 550,
-    deposit: 1500,
-    image: 'https://images.unsplash.com/photo-1564466809058-bf4114d55352?auto=format&fit=crop&q=80',
-    status: 'AVAILABLE',
-  },
-];
-
-export default function AllGearPage() {
+export default function AllGearPage({ searchParams }) {
+  const { category: initialCategory } = use(searchParams);
   const { addToCart } = useCart();
 
   const [gearList, setGearList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   // Filter states
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
+  const [selectedCategory, setSelectedCategory] = useState(
+    typeof initialCategory === 'string' && initialCategory ? initialCategory : 'ทั้งหมด'
+  );
   const [priceRange, setPriceRange] = useState('all'); // 'all' | 'under1000' | '1000-2000' | 'above2000'
   const [sortBy, setSortBy] = useState('default'); // 'default' | 'price_asc' | 'price_desc'
 
+  // Category buttons come from the gear that actually exists
   const categories = [
     'ทั้งหมด',
-    'Mirrorless/DSLR',
-    'Cinema & Video Cam',
-    'Action Cam & Drone',
-    'Lens/Accessories',
+    ...new Set(gearList.map((item) => item.category).filter(Boolean)),
   ];
 
-  // Fetch from /api/gear
+  // Fetch all gear once; filtering happens client-side
   useEffect(() => {
     const fetchGear = async () => {
       try {
-        setLoading(true);
-        const params = new URLSearchParams();
-        if (selectedCategory !== 'ทั้งหมด') {
-          params.append('category', selectedCategory);
-        }
-        if (search.trim()) {
-          params.append('search', search.trim());
-        }
-
-        const res = await fetch(`/api/gear?${params.toString()}`);
+        const res = await fetch('/api/gear');
         if (!res.ok) throw new Error('Failed to fetch gear');
-        const data = await res.json();
-
-        if (Array.isArray(data) && data.length > 0) {
-          setGearList(data);
-        } else if (!search && selectedCategory === 'ทั้งหมด') {
-          // If empty DB, use fallback data
-          setGearList(fallbackGear);
-        } else {
-          setGearList(data);
-        }
+        setGearList(await res.json());
       } catch (err) {
         console.error('Error loading gear:', err);
-        setGearList(fallbackGear);
+        setError('ไม่สามารถโหลดรายการอุปกรณ์ได้ กรุณาลองใหม่อีกครั้ง');
       } finally {
         setLoading(false);
       }
     };
 
     fetchGear();
-  }, [selectedCategory, search]);
+  }, []);
 
   // Client-side Price & Sorting Filtering
+  const searchTerm = search.trim().toLowerCase();
   const displayedGear = gearList
+    .filter(
+      (item) =>
+        (selectedCategory === 'ทั้งหมด' || item.category === selectedCategory) &&
+        (!searchTerm || item.name?.toLowerCase().includes(searchTerm))
+    )
     .filter((item) => {
       const price = Number(item.pricePerDay || 0);
       if (priceRange === 'under1000') return price < 1000;
@@ -314,6 +220,8 @@ export default function AllGearPage() {
               </div>
             ))}
           </div>
+        ) : error ? (
+          <p className="text-center text-red-400 text-sm py-16">{error}</p>
         ) : displayedGear.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {displayedGear.map((gear) => (

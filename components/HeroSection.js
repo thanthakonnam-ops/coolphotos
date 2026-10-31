@@ -2,8 +2,19 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-export default function HeroSection() {
+// Remember the chosen dates so checkout can prefill them
+function saveDates(start, end) {
+  try {
+    sessionStorage.setItem('coolphotos_dates', JSON.stringify({ start, end }));
+  } catch {
+    // ignore
+  }
+}
+
+export default function HeroSection({ gearCategories = [] }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('gear'); // 'gear' | 'photographer'
 
   // Gear search state
@@ -18,18 +29,18 @@ export default function HeroSection() {
 
   const handleGearSearch = (e) => {
     e.preventDefault();
-    const rentalSection = document.getElementById('rental');
-    if (rentalSection) {
-      rentalSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    saveDates(gearStartDate, gearEndDate);
+    const params = new URLSearchParams();
+    if (gearCategory) params.set('category', gearCategory);
+    router.push(`/gear?${params.toString()}`);
   };
 
   const handlePhotographerSearch = (e) => {
     e.preventDefault();
-    const photoSection = document.getElementById('photographers');
-    if (photoSection) {
-      photoSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    saveDates(shootDate, '');
+    const params = new URLSearchParams();
+    if (specialty !== 'ทั้งหมด') params.set('specialty', specialty);
+    router.push(`/photographers?${params.toString()}`);
   };
 
   return (
@@ -114,10 +125,11 @@ export default function HeroSection() {
                       className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 appearance-none transition"
                     >
                       <option value="">ทั้งหมด</option>
-                      <option value="Mirrorless/DSLR">Mirrorless / DSLR</option>
-                      <option value="Cinema & Video Cam">Cinema & Video Cam</option>
-                      <option value="Action Cam & Drone">Action Cam & Drone</option>
-                      <option value="Lens/Accessories">Lens & Accessories</option>
+                      {gearCategories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
                     </select>
                     <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
                   </div>

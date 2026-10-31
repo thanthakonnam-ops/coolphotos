@@ -9,20 +9,16 @@ export default function GearSection({ initialGear = [] }) {
   const { addToCart } = useCart();
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
 
+  // Category buttons come from the gear that actually exists
   const categories = [
     'ทั้งหมด',
-    'Mirrorless/DSLR',
-    'Cinema & Video Cam',
-    'Action Cam & Drone',
-    'Lens/Accessories',
+    ...new Set(initialGear.map((item) => item.category).filter(Boolean)),
   ];
 
   const filteredGear =
     selectedCategory === 'ทั้งหมด'
       ? initialGear
-      : initialGear.filter((item) =>
-          item.category?.toLowerCase().includes(selectedCategory.toLowerCase())
-        );
+      : initialGear.filter((item) => item.category === selectedCategory);
 
   return (
     <section id="rental" className="py-20 bg-slate-900 relative">

@@ -6,6 +6,14 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 เริ่มต้นการ Seed ข้อมูล...')
 
+  // Seeding wipes everything — refuse if real customers have already booked
+  const bookingCount = await prisma.booking.count()
+  if (bookingCount > 0 && !process.argv.includes('--force')) {
+    console.error(`❌ มีรายการจองอยู่แล้ว ${bookingCount} รายการ การ Seed จะลบข้อมูลทั้งหมด`)
+    console.error('   ถ้าต้องการลบจริง ให้รัน: npm run db:seed -- --force')
+    process.exit(1)
+  }
+
   // ล้างข้อมูลเก่าตามลำดับความสัมพันธ์
   console.log('🗑️  กำลังล้างข้อมูลเก่า...')
   await prisma.cartItem.deleteMany()
@@ -17,30 +25,36 @@ async function main() {
 
   // 1. Seed ผู้ใช้งาน (Users)
   console.log('👤 กำลังสร้างผู้ใช้งานเริ่มต้น...')
-  const adminPassword = await bcrypt.hash('admin123', 12)
-  const userPassword = await bcrypt.hash('test123', 12)
-
+  // Set SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD when seeding the production database
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@coolphotos.com'
+  if (!process.env.SEED_ADMIN_PASSWORD) {
+    console.warn('⚠️  ใช้รหัสผ่านแอดมินเริ่มต้น admin123 — ห้ามใช้กับเว็บจริง (ตั้ง SEED_ADMIN_PASSWORD)')
+  }
+  const adminPassword = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || 'admin123', 12)
   const admin = await prisma.user.create({
     data: {
       name: 'Admin',
-      email: 'admin@coolphotos.com',
+      email: adminEmail,
       password: adminPassword,
       phone: '0812345678',
       role: 'ADMIN'
     }
   })
+  console.log(`✅ สร้างผู้ดูแลระบบเรียบร้อย: ${admin.email}`)
 
-  const testUser = await prisma.user.create({
-    data: {
-      name: 'ทดสอบ ผู้ใช้',
-      email: 'test@coolphotos.com',
-      password: userPassword,
-      phone: '0898765432',
-      role: 'USER'
-    }
-  })
-
-  console.log(`✅ สร้างผู้ใช้งานเรียบร้อย: ${admin.email}, ${testUser.email}`)
+  // Demo customer with a known password — only for local development
+  if (!process.env.SEED_ADMIN_PASSWORD) {
+    const testUser = await prisma.user.create({
+      data: {
+        name: 'ทดสอบ ผู้ใช้',
+        email: 'test@coolphotos.com',
+        password: await bcrypt.hash('test123', 12),
+        phone: '0898765432',
+        role: 'USER'
+      }
+    })
+    console.log(`✅ สร้างผู้ใช้ทดสอบเรียบร้อย: ${testUser.email}`)
+  }
 
   // 2. Seed อุปกรณ์ (Gear)
   console.log('📷 กำลังสร้างรายการอุปกรณ์...')

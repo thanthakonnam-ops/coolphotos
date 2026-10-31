@@ -42,11 +42,11 @@ export default function Header() {
   }, [mobileMenuOpen]);
 
   const navLinks = [
-    { href: '#rental', label: 'เช่ากล้อง & เลนส์', icon: 'fa-camera' },
-    { href: '#photographers', label: 'จองคิวช่างภาพ', icon: 'fa-user-tie' },
-    { href: '#packages', label: 'แพ็กเกจสุดคุ้ม', icon: 'fa-box-open' },
+    { href: '/#rental', label: 'เช่ากล้อง & เลนส์', icon: 'fa-camera' },
+    { href: '/#photographers', label: 'จองคิวช่างภาพ', icon: 'fa-user-tie' },
+    { href: '/#packages', label: 'แพ็กเกจสุดคุ้ม', icon: 'fa-box-open' },
     {
-      href: '#sdg',
+      href: '/#sdg',
       label: 'แนวคิดความยั่งยืน (SDG)',
       icon: 'fa-leaf',
       special: true,
@@ -160,14 +160,16 @@ export default function Header() {
                       </div>
 
                       <div className="py-1">
-                        <Link
-                          href="/profile"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700/60 hover:text-white transition"
-                        >
-                          <i className="fa-regular fa-user text-slate-400 w-4"></i>
-                          <span>ข้อมูลโปรไฟล์</span>
-                        </Link>
+                        {session.user?.role === 'ADMIN' && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-orange-300 hover:bg-slate-700/60 hover:text-white transition"
+                          >
+                            <i className="fa-solid fa-clipboard-check text-orange-400 w-4"></i>
+                            <span>จัดการการจอง (แอดมิน)</span>
+                          </Link>
+                        )}
                         <Link
                           href="/orders"
                           onClick={() => setUserDropdownOpen(false)}
@@ -316,6 +318,28 @@ export default function Header() {
                   </span>
                 )}
               </Link>
+
+              {session && (
+                <Link
+                  href="/bookings"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-slate-800 hover:text-white transition"
+                >
+                  <i className="fa-solid fa-receipt w-5 text-center text-slate-400"></i>
+                  <span>ประวัติการเช่า & จองคิว</span>
+                </Link>
+              )}
+
+              {session?.user?.role === 'ADMIN' && (
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-orange-300 hover:bg-slate-800 hover:text-white transition"
+                >
+                  <i className="fa-solid fa-clipboard-check w-5 text-center text-orange-400"></i>
+                  <span>จัดการการจอง (แอดมิน)</span>
+                </Link>
+              )}
             </nav>
           </div>
 

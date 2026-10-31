@@ -4,10 +4,20 @@ import bcrypt from 'bcryptjs'
 
 export async function POST(request) {
   try {
-    const body = await request.json()
-    const { name, email, password, phone } = body
+    let body
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'รูปแบบข้อมูลไม่ถูกต้อง' }, { status: 400 })
+    }
+    const { name, email, password, phone } = body || {}
 
-    if (!name || !email || !password) {
+    if (
+      typeof name !== 'string' || !name.trim() ||
+      typeof email !== 'string' || !email ||
+      typeof password !== 'string' || !password ||
+      (phone !== undefined && phone !== null && typeof phone !== 'string')
+    ) {
       return NextResponse.json(
         { error: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (ชื่อ, อีเมล, รหัสผ่าน)' },
         { status: 400 }

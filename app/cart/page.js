@@ -5,14 +5,16 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCart } from '@/components/CartProvider';
+import { DEPOSIT_RATE } from '@/lib/pricing';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, getCartTotal } =
     useCart();
 
   const subtotal = getCartTotal();
-  const deposit = Math.round(subtotal * 0.3); // มัดจำ 30%
+  const deposit = Math.round(subtotal * DEPOSIT_RATE);
   const total = subtotal + deposit;
+  const hasGear = cartItems.some((item) => item.type === 'gear');
 
   const getTypeLabel = (type) => {
     switch (type) {
@@ -135,7 +137,9 @@ export default function CartPage() {
                       </h3>
                       <p className="text-xs text-orange-400 font-semibold">
                         ฿{Number(item.price || 0).toLocaleString()}
-                        <span className="text-slate-400 font-normal"> / หน่วย</span>
+                        <span className="text-slate-400 font-normal">
+                          {item.type === 'gear' ? ' / วัน' : item.type === 'photographer' ? ' / ครึ่งวัน' : ' / แพ็กเกจ'}
+                        </span>
                       </p>
                     </div>
 
@@ -223,6 +227,12 @@ export default function CartPage() {
                     ฿{deposit.toLocaleString()}
                   </span>
                 </div>
+                {hasGear && (
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <i className="fa-solid fa-circle-info mr-1"></i>
+                    ค่าเช่าอุปกรณ์แสดงเป็นราคา 1 วัน ระบบจะคำนวณตามจำนวนวันที่เลือกในขั้นตอนถัดไป
+                  </p>
+                )}
                 <p className="text-[11px] text-emerald-400 leading-relaxed bg-emerald-500/5 p-2.5 rounded-xl border border-emerald-500/10">
                   <i className="fa-solid fa-shield-check mr-1"></i>
                   เงินมัดจำจะได้รับคืนเต็มจำนวนภายใน 24 ชม. หลังจากส่งคืนอุปกรณ์เรียบร้อย

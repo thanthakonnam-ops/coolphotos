@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import PhotographerCard from './PhotographerCard';
+import { matchesSpecialty } from '@/lib/specialty';
 
 export default function PhotographerSection({ initialPhotographers = [] }) {
   const [selectedSpecialty, setSelectedSpecialty] = useState('ทั้งหมด');
@@ -24,12 +25,9 @@ export default function PhotographerSection({ initialPhotographers = [] }) {
         : [p.image1, p.image2, p.image3].filter(Boolean),
   }));
 
-  const filteredPhotographers =
-    selectedSpecialty === 'ทั้งหมด'
-      ? formattedPhotographers
-      : formattedPhotographers.filter((p) =>
-          p.specialty?.toLowerCase().includes(selectedSpecialty.toLowerCase())
-        );
+  const filteredPhotographers = formattedPhotographers.filter((p) =>
+    matchesSpecialty(p.specialty, selectedSpecialty)
+  );
 
   return (
     <section id="photographers" className="py-20 bg-slate-950 relative">

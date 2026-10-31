@@ -3,14 +3,14 @@
 import React from 'react';
 import { useCart } from './CartProvider';
 
-export default function PackagesSection() {
+// Marketing copy lives here; the id and price come from the Package table so
+// the bookings API can verify them.
+export default function PackagesSection({ dbPackages = [] }) {
   const { addToCart } = useCart();
 
-  const packages = [
+  const packageDetails = [
     {
-      id: 'pkg-starter',
       name: 'Starter',
-      price: 1200,
       description: 'เช่ากล้อง Mirrorless + เลนส์ Kit 1 วัน',
       tagline: 'เหมาะสำหรับมือใหม่ ถ่ายรูปท่องเที่ยว หรือคอนเทนต์สบายๆ',
       isPopular: false,
@@ -24,9 +24,7 @@ export default function PackagesSection() {
       icon: 'fa-camera',
     },
     {
-      id: 'pkg-creator',
       name: 'Creator',
-      price: 5500,
       description: 'เช่ากล้อง + ช่างภาพ ครึ่งวัน',
       tagline: 'คุ้มค่าที่สุด สำหรับงานรับปริญญา โปรไฟล์ และสินค้า',
       isPopular: true,
@@ -41,9 +39,7 @@ export default function PackagesSection() {
       icon: 'fa-fire',
     },
     {
-      id: 'pkg-pro',
       name: 'Pro',
-      price: 12000,
       description: 'เช่ากล้อง + ช่างภาพ เต็มวัน',
       tagline: 'ครบวงจรสำหรับงานแต่งงาน งานอีเวนต์ใหญ่ และโปรดักชั่น',
       isPopular: false,
@@ -58,7 +54,13 @@ export default function PackagesSection() {
     },
   ];
 
+  const packages = packageDetails.map((pkg) => {
+    const dbPkg = dbPackages.find((p) => p.name === pkg.name);
+    return { ...pkg, id: dbPkg?.id ?? pkg.name, price: dbPkg?.price, available: Boolean(dbPkg) };
+  });
+
   const handleSelectPackage = (pkg) => {
+    if (!pkg.available) return;
     addToCart({
       id: pkg.id,
       type: 'package',
@@ -140,7 +142,7 @@ export default function PackagesSection() {
                   <div className="flex items-baseline gap-1">
                     <span className="text-slate-400 text-sm">฿</span>
                     <span className="text-4xl font-extrabold text-white tracking-tight">
-                      {pkg.price.toLocaleString()}
+                      {pkg.available ? pkg.price.toLocaleString() : '-'}
                     </span>
                     <span className="text-slate-400 text-xs ml-1">/ แพ็กเกจ</span>
                   </div>
@@ -169,14 +171,15 @@ export default function PackagesSection() {
               <button
                 type="button"
                 onClick={() => handleSelectPackage(pkg)}
-                className={`w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
+                disabled={!pkg.available}
+                className={`disabled:opacity-50 disabled:cursor-not-allowed w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
                   pkg.isPopular
                     ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98]'
                     : 'bg-slate-700/80 hover:bg-slate-700 text-white hover:text-orange-400 border border-slate-600/70 hover:border-orange-500/50'
                 }`}
               >
                 <i className="fa-solid fa-cart-shopping text-xs"></i>
-                <span>เลือกแพ็กเกจนี้</span>
+                <span>{pkg.available ? 'เลือกแพ็กเกจนี้' : 'ยังไม่เปิดให้บริการ'}</span>
               </button>
             </div>
           ))}

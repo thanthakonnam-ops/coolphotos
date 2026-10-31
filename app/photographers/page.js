@@ -1,98 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PhotographerCard from '@/components/PhotographerCard';
 
-const fallbackPhotographers = [
-  {
-    id: 'photo-1',
-    name: 'คุณธนกฤต วิทยากร (เบียร์)',
-    specialty: 'พอร์ตเทรต/รับปริญญา',
-    location: 'กรุงเทพฯ และปริมณฑล',
-    rating: 4.9,
-    reviewCount: 128,
-    pricePerHalf: 3500,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80',
-    image1: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80',
-    image2: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80',
-    image3: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'photo-2',
-    name: 'คุณพิมพ์ชนก แสงแก้ว (นก)',
-    specialty: 'งานแต่งงาน/พรีเวดดิ้ง',
-    location: 'กรุงเทพฯ / ทั่วประเทศ',
-    rating: 5.0,
-    reviewCount: 95,
-    pricePerHalf: 6500,
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80',
-    image1: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80',
-    image2: 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&q=80',
-    image3: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'photo-3',
-    name: 'คุณณัฐดนัย ภัทรพล (ต้น)',
-    specialty: 'อีเวนต์/คอนเสิร์ต',
-    location: 'กรุงเทพฯ',
-    rating: 4.8,
-    reviewCount: 76,
-    pricePerHalf: 4500,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80',
-    image1: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80',
-    image2: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80',
-    image3: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'photo-4',
-    name: 'คุณอารียา กุลสวัสดิ์ (แพรว)',
-    specialty: 'สินค้า/อาหาร',
-    location: 'กรุงเทพฯ และปริมณฑล',
-    rating: 4.9,
-    reviewCount: 88,
-    pricePerHalf: 4000,
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80',
-    image1: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80',
-    image2: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80',
-    image3: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'photo-5',
-    name: 'คุณกิตติศักดิ์ เจริญดี (แม็ก)',
-    specialty: 'พอร์ตเทรต/รับปริญญา',
-    location: 'เชียงใหม่ / ภาคเหนือ',
-    rating: 4.7,
-    reviewCount: 64,
-    pricePerHalf: 3000,
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80',
-    image1: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80',
-    image2: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80',
-    image3: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'photo-6',
-    name: 'คุณวรรณิศา รัตนโชติ (วิว)',
-    specialty: 'งานแต่งงาน/พรีเวดดิ้ง',
-    location: 'ภูเก็ต / ภาคใต้',
-    rating: 4.9,
-    reviewCount: 112,
-    pricePerHalf: 7000,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80',
-    image1: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80',
-    image2: 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&q=80',
-    image3: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&q=80',
-  },
-];
-
-export default function AllPhotographersPage() {
+export default function AllPhotographersPage({ searchParams }) {
+  const { specialty: initialSpecialty } = use(searchParams);
   const [photographers, setPhotographers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   // Filters
-  const [specialty, setSpecialty] = useState('ทั้งหมด');
+  const [specialty, setSpecialty] = useState(
+    typeof initialSpecialty === 'string' && initialSpecialty ? initialSpecialty : 'ทั้งหมด'
+  );
   const [sort, setSort] = useState('rating'); // 'rating' | 'price_asc' | 'price_desc' | 'latest'
   const [search, setSearch] = useState('');
 
@@ -118,18 +41,11 @@ export default function AllPhotographersPage() {
 
         const res = await fetch(`/api/photographers?${params.toString()}`);
         if (!res.ok) throw new Error('Failed to fetch photographers');
-        const data = await res.json();
-
-        if (Array.isArray(data) && data.length > 0) {
-          setPhotographers(data);
-        } else if (specialty === 'ทั้งหมด') {
-          setPhotographers(fallbackPhotographers);
-        } else {
-          setPhotographers(data);
-        }
+        setPhotographers(await res.json());
+        setError('');
       } catch (err) {
         console.error('Error fetching photographers:', err);
-        setPhotographers(fallbackPhotographers);
+        setError('ไม่สามารถโหลดรายชื่อช่างภาพได้ กรุณาลองใหม่อีกครั้ง');
       } finally {
         setLoading(false);
       }
@@ -297,6 +213,8 @@ export default function AllPhotographersPage() {
               </div>
             ))}
           </div>
+        ) : error ? (
+          <p className="text-center text-red-400 text-sm py-16">{error}</p>
         ) : displayedPhotographers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayedPhotographers.map((photographer) => (

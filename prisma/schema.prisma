@@ -2,9 +2,13 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Locally: run `npm run db:local` (see .env.example).
+// On Vercel: DATABASE_URL is the pooled connection string from Neon/Supabase and
+// DIRECT_URL the direct (non-pooled) one, used only for running migrations.
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -60,12 +64,22 @@ model Booking {
   id         String   @id @default(cuid())
   userId     String
   user       User     @relation(fields: [userId], references: [id])
+  orderRef   String?  // shared by all bookings made in one checkout; customers quote it when paying
   itemType   String
+  itemId     String?
   itemName   String
+  quantity   Int      @default(1)
   startDate  String
   endDate    String?
   status     String   @default("PENDING")
   totalPrice Int
+  deposit    Int      @default(0)
+  contactName   String?
+  contactPhone  String?
+  contactEmail  String?
+  address       String?
+  notes         String?
+  paymentMethod String?
   createdAt  DateTime @default(now())
 }
 
@@ -78,6 +92,7 @@ model CartItem {
   itemName String
   price    Int
   image    String?  @default("")
+  category String?  @default("")
   quantity Int      @default(1)
   addedAt  DateTime @default(now())
 }

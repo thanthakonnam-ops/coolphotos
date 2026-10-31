@@ -12,14 +12,16 @@ export async function GET(request) {
     // Filter by category if provided and not "all"
     if (category && category !== 'ALL' && category !== 'ทั้งหมด') {
       where.category = {
-        contains: category
+        contains: category,
+        mode: 'insensitive'
       }
     }
 
     // Search by name if search param provided
     if (search && search.trim() !== '') {
       where.name = {
-        contains: search.trim()
+        contains: search.trim(),
+        mode: 'insensitive'
       }
     }
 
