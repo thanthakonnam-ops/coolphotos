@@ -254,6 +254,19 @@ export default function HeroSection({ gearCategories = [] }) {
           )}
         </div>
 
+        {/* Beginner shortcut to the advisor */}
+        <div className="mt-5 text-center">
+          <Link
+            href="/advisor"
+            className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-orange-400 transition"
+          >
+            <i className="fa-solid fa-wand-magic-sparkles text-orange-400"></i>
+            <span>
+              ไม่รู้จะเลือกอะไร? <span className="font-semibold underline underline-offset-4">ให้ผู้ช่วยแนะนำตามงบ</span>
+            </span>
+          </Link>
+        </div>
+
         {/* Feature Highlights */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 text-slate-300 text-xs sm:text-sm">
           <div className="flex items-center justify-center gap-2">

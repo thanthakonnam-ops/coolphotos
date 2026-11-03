@@ -45,6 +45,7 @@ export default function Header() {
     { href: '/#rental', label: 'เช่ากล้อง & เลนส์', icon: 'fa-camera' },
     { href: '/#photographers', label: 'จองคิวช่างภาพ', icon: 'fa-user-tie' },
     { href: '/#packages', label: 'แพ็กเกจสุดคุ้ม', icon: 'fa-box-open' },
+    { href: '/advisor', label: 'ผู้ช่วยเลือก', icon: 'fa-wand-magic-sparkles' },
     {
       href: '/#sdg',
       label: 'แนวคิดความยั่งยืน (SDG)',
