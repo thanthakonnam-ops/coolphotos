@@ -30,7 +30,7 @@ export default function PhotographerSection({ initialPhotographers = [] }) {
   );
 
   return (
-    <section id="photographers" className="py-20 bg-slate-950 relative">
+    <section id="photographers" className="py-20 bg-slate-950 relative overflow-hidden">
       {/* Decorative Glow */}
       <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
 

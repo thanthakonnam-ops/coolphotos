@@ -55,6 +55,7 @@ export default function Header() {
   ];
 
   return (
+    <>
     <header
       className={`sticky top-0 z-50 transition-all duration-300 font-sans ${
         scrolled
@@ -219,9 +220,11 @@ export default function Header() {
         </div>
       </div>
 
+    </header>
+
       {/* Mobile Slide-in Overlay Menu */}
       <div
-        className={`fixed inset-0 z-50 transition-all duration-300 md:hidden ${
+        className={`fixed inset-0 z-50 overflow-hidden transition-all duration-300 md:hidden ${
           mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
       >
@@ -370,6 +373,6 @@ export default function Header() {
           </div>
         </div>
       </div>
-    </header>
+    </>
   );
 }
