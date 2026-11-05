@@ -1,10 +1,11 @@
 import { randomBytes } from 'crypto'
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { DATE_RE, MAX_QUANTITY, todayStr, rentalDays, priceLine } from '@/lib/pricing'
 import { ITEM_TYPES, findItem } from '@/lib/catalog'
+import { notifyShop } from '@/lib/line'
 
 const PAYMENT_METHODS = ['promptpay']
 const MAX_ITEMS = 20
@@ -19,6 +20,23 @@ class BookingError extends Error {
 
 function cleanText(value, maxLength) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : ''
+}
+
+// Customer details stay out of this message (they are on /admin) because the
+// privacy policy promises not to pass them to outside services
+function newOrderMessage(orderRef, bookings) {
+  const { startDate } = bookings[0]
+  // Only gear has an end date, and an order can mix gear with photographers
+  const endDate = bookings.find((b) => b.endDate)?.endDate
+  const dates = endDate && endDate !== startDate ? `${startDate} ถึง ${endDate}` : startDate
+  const amount = bookings.reduce((sum, b) => sum + b.totalPrice + b.deposit, 0)
+  return [
+    `มีการจองใหม่ ${orderRef}`,
+    ...bookings.map((b) => `- ${b.itemName} x${b.quantity}`),
+    `วันที่: ${dates}`,
+    `ยอดชำระ (รวมมัดจำ): ฿${amount.toLocaleString()}`,
+    'ดูข้อมูลลูกค้าได้ที่หน้าจัดการการจอง'
+  ].join('\n')
 }
 
 // Gear and photographers can only be booked once for overlapping dates
@@ -183,6 +201,8 @@ export async function POST(request) {
       await tx.cartItem.deleteMany({ where: { userId } })
       return created
     })
+
+    after(() => notifyShop(newOrderMessage(orderRef, createdBookings)))
 
     return NextResponse.json(
       {
