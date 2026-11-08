@@ -70,7 +70,12 @@ export default function CheckoutPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setContactInfo((prev) => ({ ...prev, [name]: value }));
+    setContactInfo((prev) => {
+      const next = { ...prev, [name]: value };
+      // A return date before the new start date is no longer valid
+      if (name === 'startDate' && next.endDate && value && next.endDate < value) next.endDate = '';
+      return next;
+    });
   };
 
   const handleSubmit = async (e) => {

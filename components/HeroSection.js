@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { todayStr } from '@/lib/pricing';
 
 // Remember the chosen dates so checkout can prefill them
 function saveDates(start, end) {
@@ -15,6 +16,7 @@ function saveDates(start, end) {
 
 export default function HeroSection({ gearCategories = [] }) {
   const router = useRouter();
+  const today = todayStr();
   const [activeTab, setActiveTab] = useState('gear'); // 'gear' | 'photographer'
 
   // Gear search state
@@ -26,6 +28,13 @@ export default function HeroSection({ gearCategories = [] }) {
   const [specialty, setSpecialty] = useState('ทั้งหมด');
   const [shootDate, setShootDate] = useState('');
   const [location, setLocation] = useState('กรุงเทพฯ และปริมณฑล');
+
+  // A return date before the new start date is no longer valid
+  const handleGearStartChange = (e) => {
+    const value = e.target.value;
+    setGearStartDate(value);
+    if (gearEndDate && value && gearEndDate < value) setGearEndDate('');
+  };
 
   const handleGearSearch = (e) => {
     e.preventDefault();
@@ -143,8 +152,9 @@ export default function HeroSection({ gearCategories = [] }) {
                   <div className="relative">
                     <input
                       type="date"
+                      min={today}
                       value={gearStartDate}
-                      onChange={(e) => setGearStartDate(e.target.value)}
+                      onChange={handleGearStartChange}
                       className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 transition [color-scheme:dark]"
                     />
                   </div>
@@ -158,6 +168,7 @@ export default function HeroSection({ gearCategories = [] }) {
                   <div className="relative">
                     <input
                       type="date"
+                      min={gearStartDate || today}
                       value={gearEndDate}
                       onChange={(e) => setGearEndDate(e.target.value)}
                       className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 transition [color-scheme:dark]"
@@ -211,6 +222,7 @@ export default function HeroSection({ gearCategories = [] }) {
                   </label>
                   <input
                     type="date"
+                    min={today}
                     value={shootDate}
                     onChange={(e) => setShootDate(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 transition [color-scheme:dark]"
